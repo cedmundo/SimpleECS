@@ -8,6 +8,7 @@
 #include <memory.h>
 #include <malloc.h>
 #include <assert.h>
+#include <limits.h>
 
 #define INITIAL_CAPACITY 32
 #define MAX_COMPONENTS 32
@@ -98,4 +99,84 @@ void ECSFree() {
     if (state.entityStore.maskArray != NULL) {
         free(state.entityStore.maskArray);
     }
+
+    if (state.componentStore.data != NULL) {
+        free(state.componentStore.data);
+    }
+}
+
+EntityID ECSCreateEntity() {
+    if (state.deletedEntities.count > 0) {
+        unsigned index = --state.deletedEntities.count;
+        EntityID recycled = state.deletedEntities.entityIds[index];
+        state.deletedEntities.entityIds[index] = 0L;
+        return recycled;
+    }
+
+    unsigned id = state.entityStore.count++;
+    if (state.entityStore.cap == id) {
+        unsigned *new_flag_array = reallocarray(state.entityStore.flagArray, state.entityStore.cap * 2, sizeof(unsigned));
+        unsigned *new_mask_array = reallocarray(state.entityStore.maskArray, state.entityStore.cap * 2, sizeof(unsigned));
+        void *new_data = reallocarray(state.componentStore.data, state.componentStore.cap * 2, state.componentStore.size);
+        EntityID *new_results = reallocarray(state.queryResult.results, state.entityStore.cap * 2, sizeof(EntityID));
+        if (new_flag_array == NULL || new_mask_array == NULL || new_data == NULL || new_results == NULL) {
+            return UINT_MAX;
+        }
+
+        state.entityStore.flagArray = new_flag_array;
+        state.entityStore.maskArray = new_mask_array;
+        state.entityStore.cap *= 2;
+
+        state.queryResult.cap *= 2;
+        state.queryResult.results = new_results;
+
+        state.componentStore.data = new_data;
+        state.componentStore.cap *= 2;
+    }
+
+    state.entityStore.maskArray[id] = 0;
+    state.entityStore.flagArray[id] = ENTITY_FLAG_ALIVE;
+    return (EntityID) id;
+}
+
+void ECSEntityStackPush(EntityStack *stack, EntityID entityId) {
+    if (stack->count + 1 == stack->cap) {
+        stack->entityIds = reallocarray(stack->entityIds, stack->cap * 2, sizeof(EntityID));
+        stack->cap *= 2;
+    }
+
+    stack->entityIds[stack->count] = entityId;
+    stack->count++;
+}
+
+void ECSDeleteEntity(EntityID entityId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    if ((state.entityStore.flagArray[entityId] & ENTITY_FLAG_ALIVE) != 0) {
+        state.entityStore.flagArray[entityId] &= ~ENTITY_FLAG_ALIVE;
+        state.entityStore.maskArray[entityId] = 0;
+        ECSEntityStackPush(&state.deletedEntities, entityId);
+    }
+}
+
+void *ECSGet(EntityID entityId, ComponentID componentId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    return (char*)state.componentStore.data + (entityId * state.componentStore.size + state.componentStore.dataOffsetArray[componentId]);
+}
+
+bool ECSHas(EntityID entityId, ComponentID componentId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    return (state.entityStore.maskArray[entityId] & (1 << componentId)) != 0;
+}
+
+void ECSAdd(EntityID entityId, ComponentID componentId, void *data) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    state.entityStore.maskArray[entityId] |= (1 << componentId);
+    size_t size = state.componentStore.dataSizeArray[componentId];
+    void *ptr = ECSGet(entityId, componentId);
+    memcpy(ptr, data, size);
+}
+
+void ECSRemove(EntityID entityId, ComponentID componentId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    state.entityStore.maskArray[entityId] &= ~(1 << componentId);
 }

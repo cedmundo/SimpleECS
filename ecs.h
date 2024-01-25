@@ -8,8 +8,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef int EntityID;
-typedef int ComponentID;
+#define ENTITY_FLAG_ALIVE 1
+
+typedef unsigned EntityID;
+typedef unsigned ComponentID;
 typedef struct {
     unsigned count;
     unsigned cap;
@@ -19,11 +21,12 @@ typedef struct {
 void ECSInit(int componentCount, ...);
 void ECSFree();
 
-EntityID ECSCreate();
+EntityID ECSCreateEntity();
+void ECSDeleteEntity(EntityID entityId);
+
 void *ECSGet(EntityID entityId, ComponentID componentId);
 bool ECSHas(EntityID entityId, ComponentID componentId);
 void ECSAdd(EntityID entityId, ComponentID componentId, void *data);
 void ECSRemove(EntityID entityId, ComponentID componentId);
-void ECSDelete(EntityID entityId);
 
 #endif //SIMPLEECS_ECS_H
