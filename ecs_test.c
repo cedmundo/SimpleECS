@@ -43,6 +43,8 @@ static void test_single_component(void **state) {
 }
 
 static void test_recycle_entities(void **state) {
+    UNUSED(state);
+
     ECSInit(1, sizeof(Example));
 
     EntityID first = ECSCreateEntity();
@@ -57,6 +59,28 @@ static void test_recycle_entities(void **state) {
     ECSFree();
 }
 
+static void test_entity_flags(void **state) {
+    UNUSED(state);
+
+    ECSInit(1, sizeof(Example));
+
+    FlagID aliveFID = ECS_ALIVE_FLAG_ID;
+    FlagID exampleFID = 2;
+    EntityID entityId = ECSCreateEntity();
+    assert_int_not_equal(entityId, UINT_MAX);
+    assert_true(ECSHasFlag(entityId, aliveFID));
+
+    assert_false(ECSHasFlag(entityId, exampleFID));
+    ECSSetFlag(entityId, exampleFID);
+    assert_true(ECSHasFlag(entityId, exampleFID));
+    ECSUnsetFlag(entityId, exampleFID);
+    assert_false(ECSHasFlag(entityId, exampleFID));
+
+    ECSDeleteEntity(entityId);
+    assert_false(ECSHasFlag(entityId, aliveFID));
+    ECSFree();
+}
+
 int main() {
     UNUSED_TYPE(jmp_buf);
     UNUSED_TYPE(va_list);
@@ -64,6 +88,7 @@ int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_single_component),
             cmocka_unit_test(test_recycle_entities),
+            cmocka_unit_test(test_entity_flags),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

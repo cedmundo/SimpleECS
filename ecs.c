@@ -135,7 +135,7 @@ EntityID ECSCreateEntity() {
     }
 
     state.entityStore.maskArray[id] = 0;
-    state.entityStore.flagArray[id] = ENTITY_FLAG_ALIVE;
+    state.entityStore.flagArray[id] = (1 << ECS_ALIVE_FLAG_ID);
     return (EntityID) id;
 }
 
@@ -151,8 +151,8 @@ void ECSEntityStackPush(EntityStack *stack, EntityID entityId) {
 
 void ECSDeleteEntity(EntityID entityId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
-    if ((state.entityStore.flagArray[entityId] & ENTITY_FLAG_ALIVE) != 0) {
-        state.entityStore.flagArray[entityId] &= ~ENTITY_FLAG_ALIVE;
+    if (ECSHasFlag(entityId, ECS_ALIVE_FLAG_ID)) {
+        state.entityStore.flagArray[entityId] = 0;
         state.entityStore.maskArray[entityId] = 0;
         ECSEntityStackPush(&state.deletedEntities, entityId);
     }
@@ -179,4 +179,19 @@ void ECSAdd(EntityID entityId, ComponentID componentId, void *data) {
 void ECSRemove(EntityID entityId, ComponentID componentId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.maskArray[entityId] &= ~(1 << componentId);
+}
+
+bool ECSHasFlag(EntityID entityId, FlagID flagId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    return (state.entityStore.flagArray[entityId] & (1 << flagId)) != 0;
+}
+
+void ECSSetFlag(EntityID entityId, FlagID flagId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    state.entityStore.flagArray[entityId] |= (1 << flagId);
+}
+
+void ECSUnsetFlag(EntityID entityId, FlagID flagId) {
+    assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
+    state.entityStore.flagArray[entityId] &= ~(1 << flagId);
 }
