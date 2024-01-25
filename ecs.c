@@ -118,7 +118,7 @@ EntityID ECSCreateEntity() {
         unsigned *new_flag_array = reallocarray(state.entityStore.flagArray, state.entityStore.cap * 2, sizeof(unsigned));
         unsigned *new_mask_array = reallocarray(state.entityStore.maskArray, state.entityStore.cap * 2, sizeof(unsigned));
         void *new_data = reallocarray(state.componentStore.data, state.componentStore.cap * 2, state.componentStore.size);
-        EntityID *new_results = reallocarray(state.queryResult.results, state.entityStore.cap * 2, sizeof(EntityID));
+        EntityID *new_results = reallocarray(state.queryResult.entities, state.entityStore.cap * 2, sizeof(EntityID));
         if (new_flag_array == NULL || new_mask_array == NULL || new_data == NULL || new_results == NULL) {
             return UINT_MAX;
         }
@@ -128,7 +128,7 @@ EntityID ECSCreateEntity() {
         state.entityStore.cap *= 2;
 
         state.queryResult.cap *= 2;
-        state.queryResult.results = new_results;
+        state.queryResult.entities = new_results;
 
         state.componentStore.data = new_data;
         state.componentStore.cap *= 2;
@@ -194,4 +194,26 @@ void ECSSetFlag(EntityID entityId, FlagID flagId) {
 void ECSUnsetFlag(EntityID entityId, FlagID flagId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.flagArray[entityId] &= ~(1 << flagId);
+}
+
+ECSMask ECSFilter(int n, ...) {
+    va_list va;
+    unsigned mask = 0;
+    va_start(va, n);
+    for (int i=0;i<n;i++) {
+        mask |= (1 << va_arg(va, ComponentID));
+    }
+    va_end(va);
+    return mask;
+}
+
+QueryResult *ECSRunQuery(ECSMask mask, ECSMask flags) {
+    state.queryResult.count = 0;
+    flags |= (1 << ECS_ALIVE_FLAG_ID);
+    for (int i=0; i < state.entityStore.count; i++) {
+        if ((state.entityStore.flagArray[i] & flags) == flags && (state.entityStore.maskArray[i] & mask) != 0) {
+            state.queryResult.entities[state.queryResult.count++] = i;
+        }
+    }
+    return &state.queryResult;
 }

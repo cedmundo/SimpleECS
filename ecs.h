@@ -8,16 +8,19 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define ECS_ALIVE_FLAG_ID 0
+#define ECS_ALIVE_FLAG_ID (0)
+#define ECS_UNFILTERED ((ECSMask)UINT_MAX)
+#define ECS_DEFAULT_FLAGS ((ECSMask) 1)
 
 typedef unsigned EntityID;
 typedef unsigned FlagID;
 typedef unsigned ComponentID;
+typedef unsigned ECSMask;
 
 typedef struct {
     unsigned count;
     unsigned cap;
-    EntityID *results;
+    EntityID *entities;
 } QueryResult;
 
 void ECSInit(int componentCount, ...);
@@ -34,5 +37,8 @@ void ECSRemove(EntityID entityId, ComponentID componentId);
 bool ECSHasFlag(EntityID entityId, FlagID flagId);
 void ECSSetFlag(EntityID entityId, FlagID flagId);
 void ECSUnsetFlag(EntityID entityId, FlagID flagId);
+
+ECSMask ECSFilter(int n, ...);
+QueryResult *ECSRunQuery(ECSMask components, ECSMask flags);
 
 #endif //SIMPLEECS_ECS_H
