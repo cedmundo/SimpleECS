@@ -55,11 +55,12 @@ void SystemPrintTens(ECSFlagID tenFID, ECSFlagID beforeFiftyFID) {
 }
 
 void main() {
-    ECSFlagID tenFID = 1;
-    ECSFlagID firstFiftyFID = 2;
-    ECSComponentID oddCID = 0;
-    ECSComponentID evenCID = 1;
-    ECSInit(2, sizeof(Odd), sizeof(Even));
+    ECSInit();
+    ECSFlagID tenFID = ECSRegisterFlag();
+    ECSFlagID firstFiftyFID = ECSRegisterFlag();
+    ECSComponentID oddCID = ECSRegisterComponent(sizeof(Odd));
+    ECSComponentID evenCID = ECSRegisterComponent(sizeof(Even));
+    ECSMakeLayout();
     
     for (int i=0;i<100;i++) {
         ECSEntityID entityId = ECSCreateEntity();

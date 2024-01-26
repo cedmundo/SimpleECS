@@ -23,8 +23,17 @@ typedef struct {
     ECSEntityID *entities;
 } ECSQueryResult;
 
-// Initializes the global state with a fixed size of components
-void ECSInit(int componentCount, ...);
+// Sets the default global state
+void ECSInit();
+
+// Creates a new component ID
+ECSComponentID ECSRegisterComponent(size_t s);
+
+// Creates a new flag ID
+ECSFlagID ECSRegisterFlag();
+
+// Initializes the needed memory for the ECS state, after this commit it is not possible to register new components.
+void ECSMakeLayout();
 
 // Releases all memory used by the global state
 void ECSFree();

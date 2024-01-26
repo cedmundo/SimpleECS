@@ -27,8 +27,10 @@ typedef struct {
 
 static void test_single_component(void **state) {
     UNUSED(state);
-    ECSComponentID exampleCID = 0;
-    ECSInit(1, sizeof(Example));
+
+    ECSInit();
+    ECSComponentID exampleCID = ECSRegisterComponent(sizeof(Example));
+    ECSMakeLayout();
 
     ECSEntityID entity = ECSCreateEntity();
     assert_int_not_equal(entity, UINT_MAX);
@@ -53,7 +55,9 @@ static void test_single_component(void **state) {
 static void test_recycle_entities(void **state) {
     UNUSED(state);
 
-    ECSInit(1, sizeof(Example));
+    ECSInit();
+    ECSRegisterComponent(sizeof(Example));
+    ECSMakeLayout();
 
     ECSEntityID first = ECSCreateEntity();
     assert_int_not_equal(first, UINT_MAX);
@@ -70,10 +74,11 @@ static void test_recycle_entities(void **state) {
 static void test_entity_flags(void **state) {
     UNUSED(state);
 
-    ECSInit(1, sizeof(Example));
-
+    ECSInit();
     ECSFlagID aliveFID = ECS_ALIVE_FLAG_ID;
-    ECSFlagID exampleFID = 2;
+    ECSFlagID exampleFID = ECSRegisterFlag();
+    ECSMakeLayout();
+
     ECSEntityID entityId = ECSCreateEntity();
     assert_int_not_equal(entityId, UINT_MAX);
     assert_true(ECSHasFlag(entityId, aliveFID));
@@ -92,32 +97,33 @@ static void test_entity_flags(void **state) {
 static void test_query(void **state) {
     UNUSED(state);
 
-    ECSInit(2, sizeof(Odd), sizeof(Even), sizeof(Example));
-    ECSComponentID OddCID = 0;
-    ECSComponentID EvenCID = 1;
-    ECSComponentID UnknownCID = 2;
-    ECSFlagID TenFID = 1;
-    ECSFlagID UnknownFID = 2;
-    ECSFlagID FirstFiftyFID = 3;
+    ECSInit();
+    ECSComponentID oddCID = ECSRegisterComponent(sizeof(Odd));
+    ECSComponentID evenCID = ECSRegisterComponent(sizeof(Even));
+    ECSComponentID exampleCID = ECSRegisterComponent(sizeof(Example));
+    ECSFlagID tenFID = ECSRegisterFlag();
+    ECSFlagID unknownFID = ECSRegisterFlag();
+    ECSFlagID beforeFiftyFID = ECSRegisterFlag();
+    ECSMakeLayout();
 
     for (int i=0;i<100;i++) {
         ECSEntityID entityId = ECSCreateEntity();
         if (i % 2 == 0) {
-            ECSAdd(entityId, EvenCID, &(Even) {
+            ECSAdd(entityId, evenCID, &(Even) {
                 .number = i,
             });
         } else {
-            ECSAdd(entityId, OddCID, &(Odd) {
+            ECSAdd(entityId, oddCID, &(Odd) {
                 .number = i,
             });
         }
 
         if (i < 50) {
-            ECSSetFlag(entityId, FirstFiftyFID);
+            ECSSetFlag(entityId, beforeFiftyFID);
         }
 
         if (i % 10 == 0) {
-            ECSSetFlag(entityId, TenFID);
+            ECSSetFlag(entityId, tenFID);
         }
     }
 
@@ -126,22 +132,22 @@ static void test_query(void **state) {
     result = ECSRunQuery(ECS_UNFILTERED, ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 100);
 
-    result = ECSRunQuery(ECSFilter(1, OddCID), ECS_DEFAULT_FLAGS);
+    result = ECSRunQuery(ECSFilter(1, oddCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 50);
 
-    result = ECSRunQuery(ECSFilter(1, EvenCID), ECS_DEFAULT_FLAGS);
+    result = ECSRunQuery(ECSFilter(1, evenCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 50);
 
-    result = ECSRunQuery(ECSFilter(1, UnknownCID), ECS_DEFAULT_FLAGS);
+    result = ECSRunQuery(ECSFilter(1, exampleCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 0);
 
-    result = ECSRunQuery(ECS_UNFILTERED, ECSFilter(1, TenFID));
+    result = ECSRunQuery(ECS_UNFILTERED, ECSFilter(1, tenFID));
     assert_int_equal(result->count, 10);
 
-    result = ECSRunQuery(ECSFilter(1, EvenCID), ECSFilter(1, FirstFiftyFID));
+    result = ECSRunQuery(ECSFilter(1, evenCID), ECSFilter(1, beforeFiftyFID));
     assert_int_equal(result->count, 25);
 
-    result = ECSRunQuery(ECSFilter(1, EvenCID), ECSFilter(1, UnknownFID));
+    result = ECSRunQuery(ECSFilter(1, evenCID), ECSFilter(1, unknownFID));
     assert_int_equal(result->count, 0);
 
     ECSFree();

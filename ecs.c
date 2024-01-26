@@ -20,11 +20,12 @@ typedef struct {
 } EntityStack;
 
 typedef struct {
-    size_t *dataOffsetArray;
-    size_t *dataSizeArray;
+    size_t dataOffsetArray[MAX_COMPONENTS];
+    size_t dataSizeArray[MAX_COMPONENTS];
     void *data;
     size_t size;
     unsigned typeCount;
+    unsigned flagCount;
     unsigned cap;
 } ComponentStore;
 
@@ -44,34 +45,32 @@ typedef struct {
 
 static State state = { 0 };
 
-void ECSInit(int componentCount, ...) {
-    assert(componentCount < MAX_COMPONENTS && "error: componentCount greater than max components allowed");
+void ECSInit() {
+    state.componentStore.flagCount = 1;
+}
 
-    size_t size = 0L;
-    size_t sizes[MAX_COMPONENTS];
-    size_t offsets[MAX_COMPONENTS];
+ECSComponentID ECSRegisterComponent(size_t s) {
+    assert(state.componentStore.typeCount < MAX_COMPONENTS && "error: maximum number of components reached!");
+    size_t componentID = state.componentStore.typeCount;
+    state.componentStore.dataSizeArray[componentID] = s;
+    state.componentStore.dataOffsetArray[componentID] = state.componentStore.size;
 
-    va_list ap;
-    va_start(ap, componentCount);
-    for (int i = 0; i < componentCount; i++) {
-        sizes[i] = va_arg(ap, size_t);
-        offsets[i] = size;
-        size += sizes[i];
-    }
-    va_end(ap);
+    state.componentStore.size += s;
+    state.componentStore.typeCount ++;
+    return componentID;
+}
 
+ECSFlagID ECSRegisterFlag() {
+    return state.componentStore.flagCount++;
+}
+
+void ECSMakeLayout() {
     state.deletedEntities.cap = INITIAL_CAPACITY;
     state.deletedEntities.count = 0;
     state.deletedEntities.entityIds = calloc(INITIAL_CAPACITY, sizeof(ECSEntityID));
 
-    state.componentStore.typeCount = componentCount;
     state.componentStore.cap = INITIAL_CAPACITY;
-    state.componentStore.data = calloc(INITIAL_CAPACITY, size);
-    state.componentStore.dataSizeArray = calloc(INITIAL_CAPACITY, sizeof(size_t));
-    state.componentStore.dataOffsetArray = calloc(INITIAL_CAPACITY, sizeof(size_t));
-    state.componentStore.size = size;
-    memcpy(state.componentStore.dataSizeArray, sizes, componentCount * sizeof(size_t));
-    memcpy(state.componentStore.dataOffsetArray, offsets, componentCount * sizeof(size_t));
+    state.componentStore.data = calloc(INITIAL_CAPACITY, state.componentStore.size);
 
     state.entityStore.count = 0;
     state.entityStore.cap = INITIAL_CAPACITY;
@@ -82,14 +81,6 @@ void ECSInit(int componentCount, ...) {
 void ECSFree() {
     if (state.deletedEntities.entityIds != NULL) {
         free(state.deletedEntities.entityIds);
-    }
-
-    if(state.componentStore.dataSizeArray != NULL) {
-        free(state.componentStore.dataSizeArray);
-    }
-
-    if(state.componentStore.dataOffsetArray != NULL) {
-        free(state.componentStore.dataOffsetArray);
     }
 
     if (state.entityStore.flagArray != NULL) {
