@@ -8,10 +8,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Options
 option(BUILD_TESTS "Build SimpleECS unit tests" ON)
 
-# Include scripts
-include(${CMAKE_SOURCE_DIR}/cmake/FetchCMocka.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/TestMacros.cmake)
-
 # Default target
 add_library(SimpleECS STATIC)
 target_sources(SimpleECS
@@ -25,6 +21,10 @@ install(TARGETS SimpleECS FILE_SET HEADERS)
 
 # Testing targets
 if (BUILD_TESTS)
+    # Include scripts
+    include(cmake/FetchCMocka.cmake)
+    include(cmake/TestMacros.cmake)
+
     enable_testing()
     setup_test(ecs ecs.h ecs.c)
 endif()
