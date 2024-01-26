@@ -8,9 +8,9 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define ECS_ALIVE_FLAG_ID (0)
 #define ECS_UNFILTERED ((ECSMask)UINT_MAX)
 #define ECS_DEFAULT_FLAGS ((ECSMask) 1)
+#define ECS_MAX_NAME_SIZE 32
 
 typedef unsigned ECSEntityID;
 typedef unsigned ECSFlagID;
@@ -22,6 +22,10 @@ typedef struct {
     unsigned cap;
     ECSEntityID *entities;
 } ECSQueryResult;
+
+typedef struct {
+    char name[ECS_MAX_NAME_SIZE];
+} ECSInfoComponent;
 
 // Sets the default global state
 void ECSInit();
@@ -39,10 +43,13 @@ void ECSMakeLayout();
 void ECSFree();
 
 // Create or recycle an ECSEntityID
-ECSEntityID ECSCreateEntity();
+ECSEntityID ECSCreateEntity(const char *name);
 
 // Clear all flags and component mask for the entityID and pushes the ID into recycle bin
 void ECSDeleteEntity(ECSEntityID entityId);
+
+// Return the value of the info CID
+ECSComponentID ECSGetInfoComponentID();
 
 // Get a component from an entity
 void *ECSGet(ECSEntityID entityId, ECSComponentID componentId);
@@ -55,6 +62,9 @@ void ECSAdd(ECSEntityID entityId, ECSComponentID componentId, void *data);
 
 // Remove a component from an entity (just clear the component mask)
 void ECSRemove(ECSEntityID entityId, ECSComponentID componentId);
+
+// Returns the value of alive FID
+ECSFlagID ECSGetAliveFlagID();
 
 // Check if entity has a flag
 bool ECSHasFlag(ECSEntityID entityId, ECSFlagID flagId);

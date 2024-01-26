@@ -41,12 +41,16 @@ typedef struct {
     EntityStore entityStore;
     ComponentStore componentStore;
     ECSQueryResult queryResult;
+
+    ECSComponentID infoCID;
+    ECSFlagID aliveFID;
 } State;
 
 static State state = { 0 };
 
 void ECSInit() {
-    state.componentStore.flagCount = 1;
+    state.aliveFID = ECSRegisterFlag();
+    state.infoCID = ECSRegisterComponent(sizeof(ECSInfoComponent));
 }
 
 ECSComponentID ECSRegisterComponent(size_t s) {
@@ -94,9 +98,11 @@ void ECSFree() {
     if (state.componentStore.data != NULL) {
         free(state.componentStore.data);
     }
+
+    state = (State){0};
 }
 
-ECSEntityID ECSCreateEntity() {
+ECSEntityID ECSCreateEntity(const char *name) {
     if (state.deletedEntities.count > 0) {
         unsigned index = --state.deletedEntities.count;
         ECSEntityID recycled = state.deletedEntities.entityIds[index];
@@ -126,7 +132,17 @@ ECSEntityID ECSCreateEntity() {
     }
 
     state.entityStore.maskArray[id] = 0;
-    state.entityStore.flagArray[id] = (1 << ECS_ALIVE_FLAG_ID);
+    state.entityStore.flagArray[id] = (1 << state.aliveFID);
+
+    ECSInfoComponent info = {0};
+    if (name != NULL) {
+        size_t name_len = strlen(name);
+        name_len = name_len >= ECS_MAX_NAME_SIZE - 1 ? ECS_MAX_NAME_SIZE - 1 : name_len;
+        if (name_len > 0) {
+            memcpy(info.name, name, name_len);
+        }
+    }
+    ECSAdd(id, state.infoCID, &info);
     return (ECSEntityID) id;
 }
 
@@ -142,11 +158,15 @@ void ECSEntityStackPush(EntityStack *stack, ECSEntityID entityId) {
 
 void ECSDeleteEntity(ECSEntityID entityId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
-    if (ECSHasFlag(entityId, ECS_ALIVE_FLAG_ID)) {
+    if (ECSHasFlag(entityId, state.aliveFID)) {
         state.entityStore.flagArray[entityId] = 0;
         state.entityStore.maskArray[entityId] = 0;
         ECSEntityStackPush(&state.deletedEntities, entityId);
     }
+}
+
+ECSComponentID ECSGetInfoComponentID() {
+    return state.infoCID;
 }
 
 void *ECSGet(ECSEntityID entityId, ECSComponentID componentId) {
@@ -170,6 +190,10 @@ void ECSAdd(ECSEntityID entityId, ECSComponentID componentId, void *data) {
 void ECSRemove(ECSEntityID entityId, ECSComponentID componentId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.maskArray[entityId] &= ~(1 << componentId);
+}
+
+ECSFlagID ECSGetAliveFlagID() {
+    return state.aliveFID;
 }
 
 bool ECSHasFlag(ECSEntityID entityId, ECSFlagID flagId) {
@@ -200,7 +224,7 @@ ECSMask ECSFilter(int n, ...) {
 
 ECSQueryResult *ECSRunQuery(ECSMask mask, ECSMask flags) {
     state.queryResult.count = 0;
-    flags |= (1 << ECS_ALIVE_FLAG_ID);
+    flags |= (1 << state.aliveFID);
     for (int i=0; i < state.entityStore.count; i++) {
         if ((state.entityStore.flagArray[i] & flags) == flags && (state.entityStore.maskArray[i] & mask) != 0) {
             state.queryResult.entities[state.queryResult.count++] = i;

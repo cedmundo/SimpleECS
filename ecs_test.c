@@ -32,22 +32,25 @@ static void test_single_component(void **state) {
     ECSComponentID exampleCID = ECSRegisterComponent(sizeof(Example));
     ECSMakeLayout();
 
-    ECSEntityID entity = ECSCreateEntity();
-    assert_int_not_equal(entity, UINT_MAX);
+    ECSEntityID entityId = ECSCreateEntity("example");
+    assert_int_not_equal(entityId, UINT_MAX);
 
-    assert_false(ECSHas(entity, exampleCID));
-    ECSAdd(entity, exampleCID, &(Example) {
+    ECSInfoComponent *info = ECSGet(entityId, ECSGetInfoComponentID());
+    assert_string_equal(info->name, "example");
+
+    assert_false(ECSHas(entityId, exampleCID));
+    ECSAdd(entityId, exampleCID, &(Example) {
         .name = "bob",
         .color = 0xFF00FF,
     });
-    assert_true(ECSHas(entity, exampleCID));
+    assert_true(ECSHas(entityId, exampleCID));
 
-    Example *stored = ECSGet(entity, exampleCID);
+    Example *stored = ECSGet(entityId, exampleCID);
     assert_string_equal(stored->name, "bob");
     assert_int_equal(stored->color, 0xFF00FF);
 
-    ECSRemove(entity, exampleCID);
-    assert_false(ECSHas(entity, exampleCID));
+    ECSRemove(entityId, exampleCID);
+    assert_false(ECSHas(entityId, exampleCID));
 
     ECSFree();
 }
@@ -59,12 +62,12 @@ static void test_recycle_entities(void **state) {
     ECSRegisterComponent(sizeof(Example));
     ECSMakeLayout();
 
-    ECSEntityID first = ECSCreateEntity();
+    ECSEntityID first = ECSCreateEntity("first");
     assert_int_not_equal(first, UINT_MAX);
 
     ECSDeleteEntity(first);
 
-    ECSEntityID second = ECSCreateEntity();
+    ECSEntityID second = ECSCreateEntity("second");
     assert_int_not_equal(first, UINT_MAX);
 
     assert_int_equal(first, second);
@@ -75,11 +78,11 @@ static void test_entity_flags(void **state) {
     UNUSED(state);
 
     ECSInit();
-    ECSFlagID aliveFID = ECS_ALIVE_FLAG_ID;
+    ECSFlagID aliveFID = ECSGetAliveFlagID();
     ECSFlagID exampleFID = ECSRegisterFlag();
     ECSMakeLayout();
 
-    ECSEntityID entityId = ECSCreateEntity();
+    ECSEntityID entityId = ECSCreateEntity("entity");
     assert_int_not_equal(entityId, UINT_MAX);
     assert_true(ECSHasFlag(entityId, aliveFID));
 
@@ -107,7 +110,7 @@ static void test_query(void **state) {
     ECSMakeLayout();
 
     for (int i=0;i<100;i++) {
-        ECSEntityID entityId = ECSCreateEntity();
+        ECSEntityID entityId = ECSCreateEntity(NULL);
         if (i % 2 == 0) {
             ECSAdd(entityId, evenCID, &(Even) {
                 .number = i,
