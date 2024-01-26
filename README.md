@@ -27,7 +27,7 @@ typedef struct {
 
 // Systems are just plain functions
 void SytemPrintOdds(ECSComponentID oddCID) {
-    QueryResult *result = ECSRunQuery(ECSFilter(oddCID), ECS_DEFAULT_FLAGS);
+    ECSQueryResult *result = ECSRunQuery(ECSFilter(oddCID), ECS_DEFAULT_FLAGS);
     for (int i=0;i<result->count;i++) {
         ECSEntityID entityId = result->entities[i];
         Odd *odd = ECSGet(entityID, oddCID);
@@ -36,7 +36,7 @@ void SytemPrintOdds(ECSComponentID oddCID) {
 }
 
 void SytemPrintEvens(ECSComponentID evenCID) {
-    QueryResult *result = ECSRunQuery(ECSFilter(evenCID), ECS_DEFAULT_FLAGS);
+    ECSQueryResult *result = ECSRunQuery(ECSFilter(evenCID), ECS_DEFAULT_FLAGS);
     for (int i=0;i<result->count;i++) {
         ECSEntityID entityId = result->entities[i];
         Even *even = ECSGet(entityID, evenCID);
@@ -45,7 +45,7 @@ void SytemPrintEvens(ECSComponentID evenCID) {
 }
 
 void SystemPrintTens(ECSFlagID tenFID, ECSFlagID beforeFiftyFID) {
-    QueryResult *result = ECSRunQuery(ECS_UNFILTERED, ECSFilter(tenFID));
+    ECSQueryResult *result = ECSRunQuery(ECS_UNFILTERED, ECSFilter(tenFID));
     for (int i=0;i<result->count;i++) {
         ECSEntityID entityId = result->entities[i];
         if (ECSHasFlag(entityId, beforeFiftyFID)) {

@@ -21,7 +21,7 @@ typedef struct {
     unsigned count;
     unsigned cap;
     ECSEntityID *entities;
-} QueryResult;
+} ECSQueryResult;
 
 // Initializes the global state with a fixed size of components
 void ECSInit(int componentCount, ...);
@@ -62,6 +62,6 @@ ECSMask ECSFilter(int n, ...);
 // Run a query with component and flag masks.
 // Warning: since this is a very simple implementation all queries are stored in the global state by default,
 //  do not execute several queries at the same time since results will be overriden.
-QueryResult *ECSRunQuery(ECSMask components, ECSMask flags);
+ECSQueryResult *ECSRunQuery(ECSMask components, ECSMask flags);
 
 #endif //SIMPLEECS_ECS_H

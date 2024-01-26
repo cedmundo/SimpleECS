@@ -39,7 +39,7 @@ typedef struct {
     EntityStack deletedEntities;
     EntityStore entityStore;
     ComponentStore componentStore;
-    QueryResult queryResult;
+    ECSQueryResult queryResult;
 } State;
 
 static State state = { 0 };
@@ -207,7 +207,7 @@ ECSMask ECSFilter(int n, ...) {
     return mask;
 }
 
-QueryResult *ECSRunQuery(ECSMask mask, ECSMask flags) {
+ECSQueryResult *ECSRunQuery(ECSMask mask, ECSMask flags) {
     state.queryResult.count = 0;
     flags |= (1 << ECS_ALIVE_FLAG_ID);
     for (int i=0; i < state.entityStore.count; i++) {

@@ -121,7 +121,7 @@ static void test_query(void **state) {
         }
     }
 
-    QueryResult *result;
+    ECSQueryResult *result;
 
     result = ECSRunQuery(ECS_UNFILTERED, ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 100);
