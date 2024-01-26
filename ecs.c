@@ -16,7 +16,7 @@
 typedef struct {
     unsigned count;
     unsigned cap;
-    EntityID *entityIds;
+    ECSEntityID *entityIds;
 } EntityStack;
 
 typedef struct {
@@ -62,7 +62,7 @@ void ECSInit(int componentCount, ...) {
 
     state.deletedEntities.cap = INITIAL_CAPACITY;
     state.deletedEntities.count = 0;
-    state.deletedEntities.entityIds = calloc(INITIAL_CAPACITY, sizeof(EntityID));
+    state.deletedEntities.entityIds = calloc(INITIAL_CAPACITY, sizeof(ECSEntityID));
 
     state.componentStore.typeCount = componentCount;
     state.componentStore.cap = INITIAL_CAPACITY;
@@ -105,10 +105,10 @@ void ECSFree() {
     }
 }
 
-EntityID ECSCreateEntity() {
+ECSEntityID ECSCreateEntity() {
     if (state.deletedEntities.count > 0) {
         unsigned index = --state.deletedEntities.count;
-        EntityID recycled = state.deletedEntities.entityIds[index];
+        ECSEntityID recycled = state.deletedEntities.entityIds[index];
         state.deletedEntities.entityIds[index] = 0L;
         return recycled;
     }
@@ -118,7 +118,7 @@ EntityID ECSCreateEntity() {
         unsigned *new_flag_array = reallocarray(state.entityStore.flagArray, state.entityStore.cap * 2, sizeof(unsigned));
         unsigned *new_mask_array = reallocarray(state.entityStore.maskArray, state.entityStore.cap * 2, sizeof(unsigned));
         void *new_data = reallocarray(state.componentStore.data, state.componentStore.cap * 2, state.componentStore.size);
-        EntityID *new_results = reallocarray(state.queryResult.entities, state.entityStore.cap * 2, sizeof(EntityID));
+        ECSEntityID *new_results = reallocarray(state.queryResult.entities, state.entityStore.cap * 2, sizeof(ECSEntityID));
         if (new_flag_array == NULL || new_mask_array == NULL || new_data == NULL || new_results == NULL) {
             return UINT_MAX;
         }
@@ -136,12 +136,12 @@ EntityID ECSCreateEntity() {
 
     state.entityStore.maskArray[id] = 0;
     state.entityStore.flagArray[id] = (1 << ECS_ALIVE_FLAG_ID);
-    return (EntityID) id;
+    return (ECSEntityID) id;
 }
 
-void ECSEntityStackPush(EntityStack *stack, EntityID entityId) {
+void ECSEntityStackPush(EntityStack *stack, ECSEntityID entityId) {
     if (stack->count + 1 == stack->cap) {
-        stack->entityIds = reallocarray(stack->entityIds, stack->cap * 2, sizeof(EntityID));
+        stack->entityIds = reallocarray(stack->entityIds, stack->cap * 2, sizeof(ECSEntityID));
         stack->cap *= 2;
     }
 
@@ -149,7 +149,7 @@ void ECSEntityStackPush(EntityStack *stack, EntityID entityId) {
     stack->count++;
 }
 
-void ECSDeleteEntity(EntityID entityId) {
+void ECSDeleteEntity(ECSEntityID entityId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     if (ECSHasFlag(entityId, ECS_ALIVE_FLAG_ID)) {
         state.entityStore.flagArray[entityId] = 0;
@@ -158,17 +158,17 @@ void ECSDeleteEntity(EntityID entityId) {
     }
 }
 
-void *ECSGet(EntityID entityId, ComponentID componentId) {
+void *ECSGet(ECSEntityID entityId, ECSComponentID componentId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     return (char*)state.componentStore.data + (entityId * state.componentStore.size + state.componentStore.dataOffsetArray[componentId]);
 }
 
-bool ECSHas(EntityID entityId, ComponentID componentId) {
+bool ECSHas(ECSEntityID entityId, ECSComponentID componentId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     return (state.entityStore.maskArray[entityId] & (1 << componentId)) != 0;
 }
 
-void ECSAdd(EntityID entityId, ComponentID componentId, void *data) {
+void ECSAdd(ECSEntityID entityId, ECSComponentID componentId, void *data) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.maskArray[entityId] |= (1 << componentId);
     size_t size = state.componentStore.dataSizeArray[componentId];
@@ -176,22 +176,22 @@ void ECSAdd(EntityID entityId, ComponentID componentId, void *data) {
     memcpy(ptr, data, size);
 }
 
-void ECSRemove(EntityID entityId, ComponentID componentId) {
+void ECSRemove(ECSEntityID entityId, ECSComponentID componentId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.maskArray[entityId] &= ~(1 << componentId);
 }
 
-bool ECSHasFlag(EntityID entityId, FlagID flagId) {
+bool ECSHasFlag(ECSEntityID entityId, ECSFlagID flagId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     return (state.entityStore.flagArray[entityId] & (1 << flagId)) != 0;
 }
 
-void ECSSetFlag(EntityID entityId, FlagID flagId) {
+void ECSSetFlag(ECSEntityID entityId, ECSFlagID flagId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.flagArray[entityId] |= (1 << flagId);
 }
 
-void ECSUnsetFlag(EntityID entityId, FlagID flagId) {
+void ECSUnsetFlag(ECSEntityID entityId, ECSFlagID flagId) {
     assert(entityId < UINT_MAX && "out of memory error: invalid entity id");
     state.entityStore.flagArray[entityId] &= ~(1 << flagId);
 }
@@ -201,7 +201,7 @@ ECSMask ECSFilter(int n, ...) {
     unsigned mask = 0;
     va_start(va, n);
     for (int i=0;i<n;i++) {
-        mask |= (1 << va_arg(va, ComponentID));
+        mask |= (1 << va_arg(va, ECSComponentID));
     }
     va_end(va);
     return mask;

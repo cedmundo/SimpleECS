@@ -12,31 +12,31 @@
 #define ECS_UNFILTERED ((ECSMask)UINT_MAX)
 #define ECS_DEFAULT_FLAGS ((ECSMask) 1)
 
-typedef unsigned EntityID;
-typedef unsigned FlagID;
-typedef unsigned ComponentID;
+typedef unsigned ECSEntityID;
+typedef unsigned ECSFlagID;
+typedef unsigned ECSComponentID;
 typedef unsigned ECSMask;
 
 typedef struct {
     unsigned count;
     unsigned cap;
-    EntityID *entities;
+    ECSEntityID *entities;
 } QueryResult;
 
 void ECSInit(int componentCount, ...);
 void ECSFree();
 
-EntityID ECSCreateEntity();
-void ECSDeleteEntity(EntityID entityId);
+ECSEntityID ECSCreateEntity();
+void ECSDeleteEntity(ECSEntityID entityId);
 
-void *ECSGet(EntityID entityId, ComponentID componentId);
-bool ECSHas(EntityID entityId, ComponentID componentId);
-void ECSAdd(EntityID entityId, ComponentID componentId, void *data);
-void ECSRemove(EntityID entityId, ComponentID componentId);
+void *ECSGet(ECSEntityID entityId, ECSComponentID componentId);
+bool ECSHas(ECSEntityID entityId, ECSComponentID componentId);
+void ECSAdd(ECSEntityID entityId, ECSComponentID componentId, void *data);
+void ECSRemove(ECSEntityID entityId, ECSComponentID componentId);
 
-bool ECSHasFlag(EntityID entityId, FlagID flagId);
-void ECSSetFlag(EntityID entityId, FlagID flagId);
-void ECSUnsetFlag(EntityID entityId, FlagID flagId);
+bool ECSHasFlag(ECSEntityID entityId, ECSFlagID flagId);
+void ECSSetFlag(ECSEntityID entityId, ECSFlagID flagId);
+void ECSUnsetFlag(ECSEntityID entityId, ECSFlagID flagId);
 
 ECSMask ECSFilter(int n, ...);
 QueryResult *ECSRunQuery(ECSMask components, ECSMask flags);

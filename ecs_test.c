@@ -27,10 +27,10 @@ typedef struct {
 
 static void test_single_component(void **state) {
     UNUSED(state);
-    ComponentID exampleCID = 0;
+    ECSComponentID exampleCID = 0;
     ECSInit(1, sizeof(Example));
 
-    EntityID entity = ECSCreateEntity();
+    ECSEntityID entity = ECSCreateEntity();
     assert_int_not_equal(entity, UINT_MAX);
 
     assert_false(ECSHas(entity, exampleCID));
@@ -55,12 +55,12 @@ static void test_recycle_entities(void **state) {
 
     ECSInit(1, sizeof(Example));
 
-    EntityID first = ECSCreateEntity();
+    ECSEntityID first = ECSCreateEntity();
     assert_int_not_equal(first, UINT_MAX);
 
     ECSDeleteEntity(first);
 
-    EntityID second = ECSCreateEntity();
+    ECSEntityID second = ECSCreateEntity();
     assert_int_not_equal(first, UINT_MAX);
 
     assert_int_equal(first, second);
@@ -72,9 +72,9 @@ static void test_entity_flags(void **state) {
 
     ECSInit(1, sizeof(Example));
 
-    FlagID aliveFID = ECS_ALIVE_FLAG_ID;
-    FlagID exampleFID = 2;
-    EntityID entityId = ECSCreateEntity();
+    ECSFlagID aliveFID = ECS_ALIVE_FLAG_ID;
+    ECSFlagID exampleFID = 2;
+    ECSEntityID entityId = ECSCreateEntity();
     assert_int_not_equal(entityId, UINT_MAX);
     assert_true(ECSHasFlag(entityId, aliveFID));
 
@@ -93,21 +93,21 @@ static void test_query(void **state) {
     UNUSED(state);
 
     ECSInit(2, sizeof(Odd), sizeof(Even), sizeof(Example));
-    ComponentID OddCID = 0;
-    ComponentID EvenCID = 1;
-    ComponentID UnknownCID = 2;
-    FlagID TenFID = 1;
-    FlagID UnknownFID = 2;
-    FlagID FirstFiftyFID = 3;
+    ECSComponentID OddCID = 0;
+    ECSComponentID EvenCID = 1;
+    ECSComponentID UnknownCID = 2;
+    ECSFlagID TenFID = 1;
+    ECSFlagID UnknownFID = 2;
+    ECSFlagID FirstFiftyFID = 3;
 
     for (int i=0;i<100;i++) {
-        EntityID entityId = ECSCreateEntity();
+        ECSEntityID entityId = ECSCreateEntity();
         if (i % 2 == 0) {
             ECSAdd(entityId, EvenCID, &(Even) {
                 .number = i,
             });
         } else {
-            ECSAdd(entityId, OddCID, &(Even) {
+            ECSAdd(entityId, OddCID, &(Odd) {
                 .number = i,
             });
         }
