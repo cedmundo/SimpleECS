@@ -97,7 +97,29 @@ static void test_entity_flags(void **state) {
     ECSFree();
 }
 
-static void test_query(void **state) {
+static void test_query_simple(void **state) {
+    UNUSED(state);
+
+    ECSInit();
+    ECSComponentID exampleCID = ECSRegisterComponent(sizeof(Example));
+    ECSMakeLayout();
+
+    ECSEntityID entityId = ECSCreateEntity(NULL);
+    ECSAdd(entityId, exampleCID, &(Example){
+        .name = "hello world",
+        .color = 0x00FF00,
+    });
+    ECSQueryResult *result;
+
+    result = ECSRunQuery(ECS_UNFILTERED, ECS_DEFAULT_FLAGS);
+    assert_int_equal(result->count, 1);
+
+    result = ECSRunQuery(ECSFilter(1, exampleCID), ECS_DEFAULT_FLAGS);
+    assert_int_equal(result->count, 1);
+    ECSFree();
+}
+
+static void test_query_complex(void **state) {
     UNUSED(state);
 
     ECSInit();
@@ -164,7 +186,8 @@ int main() {
             cmocka_unit_test(test_single_component),
             cmocka_unit_test(test_recycle_entities),
             cmocka_unit_test(test_entity_flags),
-            cmocka_unit_test(test_query),
+            cmocka_unit_test(test_query_simple),
+            cmocka_unit_test(test_query_complex),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

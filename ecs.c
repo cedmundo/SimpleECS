@@ -80,6 +80,9 @@ void ECSMakeLayout() {
     state.entityStore.cap = INITIAL_CAPACITY;
     state.entityStore.flagArray = calloc(INITIAL_CAPACITY, sizeof(unsigned));
     state.entityStore.maskArray = calloc(INITIAL_CAPACITY, sizeof(unsigned));
+
+    state.queryResult.entities = calloc(INITIAL_CAPACITY, sizeof(ECSEntityID));
+    state.queryResult.cap = INITIAL_CAPACITY;
 }
 
 void ECSFree() {
