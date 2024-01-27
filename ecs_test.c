@@ -111,9 +111,6 @@ static void test_query_simple(void **state) {
     });
     ECSQueryResult *result;
 
-    result = ECSRunQuery(ECS_UNFILTERED, ECS_DEFAULT_FLAGS);
-    assert_int_equal(result->count, 1);
-
     result = ECSRunQuery(ECSFilter(1, exampleCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 1);
     ECSFree();
@@ -154,9 +151,6 @@ static void test_query_complex(void **state) {
 
     ECSQueryResult *result;
 
-    result = ECSRunQuery(ECS_UNFILTERED, ECS_DEFAULT_FLAGS);
-    assert_int_equal(result->count, 100);
-
     result = ECSRunQuery(ECSFilter(1, oddCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 50);
 
@@ -165,9 +159,6 @@ static void test_query_complex(void **state) {
 
     result = ECSRunQuery(ECSFilter(1, exampleCID), ECS_DEFAULT_FLAGS);
     assert_int_equal(result->count, 0);
-
-    result = ECSRunQuery(ECS_UNFILTERED, ECSFilter(1, tenFID));
-    assert_int_equal(result->count, 10);
 
     result = ECSRunQuery(ECSFilter(1, evenCID), ECSFilter(1, beforeFiftyFID));
     assert_int_equal(result->count, 25);

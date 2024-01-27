@@ -241,7 +241,7 @@ ECSQueryResult *ECSRunQuery(ECSMask mask, ECSMask flags) {
     state.queryResult.count = 0;
     flags |= (1 << state.aliveFID);
     for (int i=0; i < state.entityStore.count; i++) {
-        if ((state.entityStore.flagArray[i] & flags) == flags && (state.entityStore.maskArray[i] & mask) != 0) {
+        if ((state.entityStore.flagArray[i] & flags) == flags && (state.entityStore.maskArray[i] & mask) == mask) {
             state.queryResult.entities[state.queryResult.count++] = i;
         }
     }
