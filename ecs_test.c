@@ -200,7 +200,7 @@ static void test_duplicate(void **state) {
     assert_int_equal(odd->number, 0xFA0);
 
     Even *even = ECSGet(duplicateEntityId, evenCID);
-    assert_int_equal(odd->number, 0xFA0);
+    assert_int_equal(even->number, 0xF0A);
 
     assert_true(ECSHasFlag(duplicateEntityId, dummyFID));
     ECSFree();
