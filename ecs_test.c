@@ -178,6 +178,34 @@ static void test_query_complex(void **state) {
     ECSFree();
 }
 
+static void test_duplicate(void **state) {
+    UNUSED(state);
+
+    ECSInit();
+    ECSComponentID oddCID = ECSRegisterComponent(sizeof(Odd));
+    ECSComponentID evenCID = ECSRegisterComponent(sizeof(Even));
+    ECSFlagID dummyFID = ECSRegisterFlag();
+    ECSMakeLayout();
+
+    ECSEntityID originalEntityId = ECSCreateEntity(NULL);
+    ECSAdd(originalEntityId, oddCID, &(Odd) {0xFA0});
+    ECSAdd(originalEntityId, evenCID, &(Even) {0xF0A });
+    ECSSetFlag(originalEntityId, dummyFID);
+
+    ECSEntityID duplicateEntityId = ECSDuplicate(originalEntityId);
+    assert_int_not_equal(originalEntityId, duplicateEntityId);
+    assert_int_not_equal(duplicateEntityId, UINT_MAX);
+
+    Odd *odd = ECSGet(duplicateEntityId, oddCID);
+    assert_int_equal(odd->number, 0xFA0);
+
+    Even *even = ECSGet(duplicateEntityId, evenCID);
+    assert_int_equal(odd->number, 0xFA0);
+
+    assert_true(ECSHasFlag(duplicateEntityId, dummyFID));
+    ECSFree();
+}
+
 int main() {
     UNUSED_TYPE(jmp_buf);
     UNUSED_TYPE(va_list);
@@ -188,6 +216,7 @@ int main() {
             cmocka_unit_test(test_entity_flags),
             cmocka_unit_test(test_query_simple),
             cmocka_unit_test(test_query_complex),
+            cmocka_unit_test(test_duplicate),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

@@ -45,6 +45,9 @@ void ECSFree();
 // Create or recycle an ECSEntityID
 ECSEntityID ECSCreateEntity(const char *name);
 
+// Duplicate an entity with all its components (including data)
+ECSEntityID ECSDuplicate(ECSEntityID entityId);
+
 // Clear all flags and component mask for the entityID and pushes the ID into recycle bin
 void ECSDeleteEntity(ECSEntityID entityId);
 

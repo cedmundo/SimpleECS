@@ -149,6 +149,18 @@ ECSEntityID ECSCreateEntity(const char *name) {
     return (ECSEntityID) id;
 }
 
+ECSEntityID ECSDuplicate(ECSEntityID entityId) {
+    ECSEntityID duplicateId = ECSCreateEntity(NULL);
+
+    // Copy data
+    memcpy(ECSGet(duplicateId, state.infoCID), ECSGet(entityId, state.infoCID), state.componentStore.size);
+
+    // Set flags
+    state.entityStore.flagArray[duplicateId] = state.entityStore.flagArray[entityId];
+    state.entityStore.maskArray[duplicateId] = state.entityStore.maskArray[entityId];
+    return duplicateId;
+}
+
 void ECSEntityStackPush(EntityStack *stack, ECSEntityID entityId) {
     if (stack->count + 1 == stack->cap) {
         stack->entityIds = reallocarray(stack->entityIds, stack->cap * 2, sizeof(ECSEntityID));
