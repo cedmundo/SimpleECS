@@ -102,6 +102,10 @@ void ECSFree() {
         free(state.componentStore.data);
     }
 
+    if (state.queryResult.entities != NULL) {
+        free(state.queryResult.entities);
+    }
+
     state = (State){0};
 }
 
